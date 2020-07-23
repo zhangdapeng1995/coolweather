@@ -1,7 +1,9 @@
 package com.coolweather.android;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -25,6 +27,7 @@ import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
@@ -34,8 +37,23 @@ public class WeatherActivity extends AppCompatActivity {
     ScrollView weatherLayout;
     @BindView(R.id.title_city)
     TextView titleCity;
-    @BindView(R.id.title_update_time)
-    TextView titleUpdateTime;
+    @BindView(R.id.refresh)
+    TextView refresh;
+    private String weatherId;
+    @OnClick(R.id.refresh)
+    void setRefresh(){
+        requestWeather(weatherId);
+    }
+    @BindView(R.id.home)
+    TextView home;
+    @OnClick(R.id.home)
+    void setHome(){
+        SharedPreferences.Editor editor=PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putString("weather",null);
+        editor.apply();
+        Intent intent=new Intent(this,MainActivity.class);
+        startActivity(intent);
+    }
     @BindView(R.id.degree_text)
     TextView degreeText;
     @BindView(R.id.weather_info_text)
@@ -64,11 +82,12 @@ public class WeatherActivity extends AppCompatActivity {
         String weatherString = pref.getString("weather", null);
         
         if(weatherString==null){
-            String weatherId=getIntent().getStringExtra("weather_id");
+            weatherId = getIntent().getStringExtra("weather_id");
             weatherLayout.setVisibility(View.INVISIBLE);
             requestWeather(weatherId);
         }else{
             Weather weather= Utility.handleWeatherResponse(weatherString);
+            weatherId=weather.basic.id;
             showWeatherInfo(weather);
         }
 
@@ -111,7 +130,6 @@ public class WeatherActivity extends AppCompatActivity {
         String weatherInfo=weather.now.cond.txt;
 
         titleCity.setText(cityName);
-        titleUpdateTime.setText(updateTime);
         degreeText.setText(degree);
         weatherInfoText.setText(weatherInfo);
         forecastLayout.removeAllViews();
